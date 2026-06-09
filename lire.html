@@ -159,7 +159,9 @@
       width: 100%; background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius); padding: 28px 24px;
-      animation: fadeIn .22s ease;
+    }
+    .game-card {
+      transition: opacity .15s ease;
     }
     .q-label {
       font-size: 0.7rem; text-transform: uppercase;
@@ -476,9 +478,6 @@ function renderQ() {
     cont.appendChild(btn);
   });
 
-  const card = document.getElementById('game-card');
-  card.style.animation = 'none';
-  requestAnimationFrame(() => card.style.animation = '');
 }
 
 function check(chosen, correct, btn) {
