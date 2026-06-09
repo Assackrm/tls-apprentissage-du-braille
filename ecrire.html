@@ -784,6 +784,8 @@ function startAlphaTimer() {
 function closeAlpha() {
   clearInterval(alphaTimerInt);
   document.getElementById('alpha-overlay').classList.remove('open');
+  const btn = document.querySelector('.ref-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '📖 Alphabet — consulté'; btn.style.opacity = '0.4'; }
 }
 function closeBg(e) { if (e.target.id==='alpha-overlay') closeAlpha(); }
 </script>
