@@ -611,7 +611,7 @@ function validateWrite() {
 
 function showResults() {
   clearInterval(timerInt);
-  const used = qCount * 20 - timeLeft;
+  const used = qCount * 10 - timeLeft;
   const correct = answers.filter(a=>a.ok).length;
   const pct = Math.round(correct/qCount*100);
   const rank = [...RANKS].reverse().find(r => pct >= r.min) || RANKS[0];
