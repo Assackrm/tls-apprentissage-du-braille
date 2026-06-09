@@ -329,10 +329,7 @@
 
 <nav>
   <div class="nav-logo">Tls<span> — Braille</span></div>
-  <div class="nav-links">
-    <a class="nav-link active" href="lire.html">👁️ Lire</a>
-    <a class="nav-link" href="ecrire.html">✍️ Écrire</a>
-  </div>
+  <div style="font-size:0.75rem;color:var(--muted);">👁️ Mode Lecture</div>
 </nav>
 
 <!-- HOME -->
@@ -431,7 +428,7 @@ const RANKS = [
 
 let qCount = 20, questions = [], qIdx = 0;
 let score = 0, streak = 0, answers = [];
-let startTime = 0, timerInt = null, answered = false;
+let timeLeft = 0, timerInt = null, answered = false;
 
 function setQ(n, btn) {
   qCount = n;
@@ -445,14 +442,15 @@ function startGame() {
   if (qCount === 26) questions = shuffle([...LETTERS]);
   document.getElementById('qtot').textContent = qCount;
   showScreen('screen-game');
-  startTime = Date.now();
+  timeLeft = qCount * 15;
   clearInterval(timerInt);
   timerInt = setInterval(() => {
-    const s = Math.floor((Date.now()-startTime)/1000);
+    timeLeft--;
     const el = document.getElementById('timer-el');
-    el.textContent = `⏱ ${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
-    el.className = 'timer' + (s > qCount*10 ? ' urgent' : '');
-  }, 500);
+    el.textContent = `⏱ ${Math.floor(timeLeft/60)}:${String(timeLeft%60).padStart(2,'0')}`;
+    el.className = 'timer' + (timeLeft <= 30 ? ' urgent' : '');
+    if (timeLeft <= 0) showResults();
+  }, 1000);
   renderQ();
 }
 
@@ -507,7 +505,7 @@ function check(chosen, correct, btn) {
 
 function showResults() {
   clearInterval(timerInt);
-  const elapsed = Math.floor((Date.now()-startTime)/1000);
+  const used = qCount * 15 - timeLeft;
   const correct = answers.filter(a=>a.ok).length;
   const pct = Math.round(correct/qCount*100);
   const rank = [...RANKS].reverse().find(r => pct >= r.min) || RANKS[0];
@@ -520,7 +518,7 @@ function showResults() {
   document.getElementById('res-score').textContent = score;
   document.getElementById('res-acc').textContent = pct+'%';
   document.getElementById('res-correct').textContent = `${correct}/${qCount}`;
-  document.getElementById('res-time').textContent = `${Math.floor(elapsed/60)}:${String(elapsed%60).padStart(2,'0')}`;
+  document.getElementById('res-time').textContent = `${Math.floor(used/60)}:${String(used%60).padStart(2,'0')}`;
 
   const barColor = pct>=100?'#f5c518':pct>=90?'#e87a3d':pct>=75?'#c47ee8':pct>=60?'#4a9eca':pct>=40?'#68b36b':'#e84040';
   setTimeout(() => {
