@@ -613,9 +613,9 @@ function updateStreak() {
   el.textContent = streak>=3 ? `${streak} 🔥` : streak>=2 ? `${streak} ✨` : '';
 }
 function posMsg() {
-  if (streak>=8) return `${streak} en série ! Légendaire ! 🔥`;
-  if (streak>=5) return `Série de ${streak} ! Dattebayo ! 🔥`;
-  return ['Parfait !','Excellent !','Bien vu !','GG ninja !','Nickel !','Impeccable !'][Math.floor(Math.random()*6)];
+  if (streak>=8) return `${streak} en série ! Je vois que le soleil te guide ! 🔥`;
+  if (streak>=5) return `Série de ${streak} ! Tu es sur la bonne voie ! 🔥`;
+  return ['Bravo jeune shinobi !'];
 }
 function saveScore() {
   const nom = document.getElementById('name-input').value.trim();
