@@ -288,6 +288,39 @@
     .recap-chip.ok { background: #3dba6f22; color: var(--green); border: 1px solid #3dba6f44; }
     .recap-chip.ko { background: #e8404022; color: var(--red);   border: 1px solid #e8404044; }
 
+    /* save form */
+    .save-box {
+      width: 100%; background: var(--card);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 20px; margin-bottom: 16px; text-align: center;
+    }
+    .save-box .save-lbl {
+      font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px;
+      color: var(--muted); margin-bottom: 12px;
+    }
+    .save-row { display: flex; gap: 8px; }
+    .save-input {
+      flex: 1; padding: 12px 14px; border-radius: 8px;
+      border: 1px solid var(--border); background: var(--surface);
+      color: var(--text); font-size: 0.95rem; outline: none;
+      transition: border-color .2s;
+    }
+    .save-input:focus { border-color: var(--accent); }
+    .save-input::placeholder { color: var(--muted); }
+    .save-submit {
+      padding: 12px 18px; border-radius: 8px; border: none;
+      background: var(--accent); color: #fff;
+      font-size: 0.88rem; font-weight: 700;
+      cursor: pointer; transition: opacity .15s; white-space: nowrap;
+    }
+    .save-submit:hover { opacity: 0.88; }
+    .save-submit:disabled { opacity: .4; cursor: default; }
+    .save-status {
+      margin-top: 10px; font-size: 0.82rem; font-weight: 600; min-height: 20px;
+    }
+    .save-status.ok { color: var(--green); }
+    .save-status.err { color: var(--red); }
+
     .action-row { display: flex; gap: 10px; width: 100%; }
     .btn-sec {
       flex: 1; padding: 14px; border-radius: var(--radius);
@@ -419,6 +452,15 @@
     </div>
   </div>
 
+  <div class="save-box" style="width:100%">
+    <div class="save-lbl">📋 Enregistre ton score</div>
+    <div class="save-row">
+      <input class="save-input" id="name-input" type="text" placeholder="Ton prénom" maxlength="30" />
+      <button class="save-submit" id="save-btn" onclick="saveScore()">💾 Envoyer</button>
+    </div>
+    <div class="save-status" id="save-status"></div>
+  </div>
+
   <div class="recap-section" style="width:100%">
     <div class="recap-label">Détail par question</div>
     <div class="recap-grid" id="recap-grid"></div>
@@ -442,6 +484,8 @@
 </div>
 
 <script>
+const SCRIPT_URL = 'COLLE_TON_URL_ICI';
+
 const BRAILLE = {
   A:[1],B:[1,2],C:[1,4],D:[1,4,5],E:[1,5],F:[1,2,4],G:[1,2,4,5],H:[1,2,5],I:[2,4],J:[2,4,5],
   K:[1,3],L:[1,2,3],M:[1,3,4],N:[1,3,4,5],O:[1,3,5],P:[1,2,3,4],Q:[1,2,3,4,5],R:[1,2,3,5],
@@ -462,6 +506,7 @@ let qCount = 20, questions = [], qIdx = 0;
 let score = 0, streak = 0, answers = [];
 let timeLeft = 0, timerInt = null;
 let answered = false, userDots = new Set();
+let lastResult = {};
 
 function setQ(n, btn) {
   qCount = n;
@@ -578,7 +623,13 @@ function showResults() {
   document.getElementById('res-score').textContent = score;
   document.getElementById('res-acc').textContent = pct+'%';
   document.getElementById('res-correct').textContent = `${correct}/${qCount}`;
-  document.getElementById('res-time').textContent = `${Math.floor(used/60)}:${String(used%60).padStart(2,'0')}`;
+  const timeStr = `${Math.floor(used/60)}:${String(used%60).padStart(2,'0')}`;
+  document.getElementById('res-time').textContent = timeStr;
+  lastResult = { score, pct, correct, timeStr };
+  document.getElementById('name-input').value = '';
+  document.getElementById('save-status').textContent = '';
+  document.getElementById('save-status').className = 'save-status';
+  document.getElementById('save-btn').disabled = false;
 
   const barColor = pct>=100?'#f5c518':pct>=90?'#e87a3d':pct>=75?'#c47ee8':pct>=60?'#4a9eca':pct>=40?'#68b36b':'#e84040';
   setTimeout(() => {
@@ -612,6 +663,44 @@ function posMsg() {
   if (streak>=5) return `Série de ${streak} ! Dattebayo ! 🔥`;
   return ['Parfait !','Excellent !','Bien formé !','GG ninja !','Impeccable !','Nickel !'][Math.floor(Math.random()*6)];
 }
+function saveScore() {
+  const nom = document.getElementById('name-input').value.trim();
+  if (!nom) {
+    const s = document.getElementById('save-status');
+    s.textContent = 'Entre ton prénom d\'abord !';
+    s.className = 'save-status err';
+    return;
+  }
+  if (!SCRIPT_URL || SCRIPT_URL === 'COLLE_TON_URL_ICI') {
+    const s = document.getElementById('save-status');
+    s.textContent = 'URL Google Sheets non configurée.';
+    s.className = 'save-status err';
+    return;
+  }
+  document.getElementById('save-btn').disabled = true;
+  const params = new URLSearchParams({
+    nom,
+    mode: 'Écriture',
+    score: lastResult.score,
+    precision: lastResult.pct + '%',
+    bonnes: lastResult.correct + '/' + qCount,
+    temps: lastResult.timeStr,
+    date: new Date().toLocaleString('fr-FR')
+  });
+  fetch(SCRIPT_URL + '?' + params, { mode: 'no-cors' })
+    .then(() => {
+      const s = document.getElementById('save-status');
+      s.textContent = '✓ Score enregistré !';
+      s.className = 'save-status ok';
+    })
+    .catch(() => {
+      const s = document.getElementById('save-status');
+      s.textContent = 'Erreur réseau, réessaie.';
+      s.className = 'save-status err';
+      document.getElementById('save-btn').disabled = false;
+    });
+}
+
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
