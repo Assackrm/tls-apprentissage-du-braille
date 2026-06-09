@@ -679,13 +679,11 @@ function saveScore() {
   }
   document.getElementById('save-btn').disabled = true;
   const params = new URLSearchParams({
+    date: new Date().toLocaleString('fr-FR'),
     nom,
     mode: 'Écriture',
     score: lastResult.score,
-    precision: lastResult.pct + '%',
-    bonnes: lastResult.correct + '/' + qCount,
-    temps: lastResult.timeStr,
-    date: new Date().toLocaleString('fr-FR')
+    precision: lastResult.pct + '%'
   });
   fetch(SCRIPT_URL + '?' + params, { mode: 'no-cors' })
     .then(() => {
