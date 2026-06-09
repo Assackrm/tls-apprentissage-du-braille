@@ -333,6 +333,23 @@
     }
     .overlay-head h3 { font-size: 0.92rem; font-weight: 700; }
     .close-x { background: none; border: none; color: var(--muted); font-size: 1.1rem; cursor: pointer; padding: 4px 8px; }
+    .alpha-timer {
+      text-align: center; margin-bottom: 14px;
+      font-size: 0.8rem; color: var(--muted);
+    }
+    .alpha-timer span {
+      font-size: 1.4rem; font-weight: 900; color: var(--accent);
+      display: block; margin-bottom: 4px;
+    }
+    .alpha-timer span.urgent { color: var(--red); }
+    .alpha-timer-bar-wrap {
+      width: 100%; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden;
+    }
+    .alpha-timer-bar {
+      height: 100%; background: var(--accent); border-radius: 2px;
+      transition: width 1s linear, background .3s;
+      width: 100%;
+    }
     .alpha-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 8px; }
     .alpha-card {
       background: var(--surface); border: 1px solid var(--border);
@@ -447,6 +464,11 @@
     <div class="overlay-head">
       <h3>📖 Alphabet Braille</h3>
       <button class="close-x" onclick="closeAlpha()">✕</button>
+    </div>
+    <div class="alpha-timer">
+      <span id="alpha-countdown">1:00</span>
+      Mémorise bien, tu ne pourras plus revenir !
+      <div class="alpha-timer-bar-wrap"><div class="alpha-timer-bar" id="alpha-bar"></div></div>
     </div>
     <div class="alpha-grid" id="alpha-grid"></div>
   </div>
@@ -661,7 +683,12 @@ function showScreen(id) {
 function goHome() { clearInterval(timerInt); showScreen('screen-home'); }
 function shuffle(a) { return [...a].sort(()=>Math.random()-.5); }
 
+let alphaTimerInt = null;
+const ALPHA_DURATION = 60;
+
 function openAlpha() {
+  const btn = document.querySelector('.ref-btn');
+  if (btn && btn.disabled) return;
   const grid = document.getElementById('alpha-grid');
   if (!grid.children.length) LETTERS.forEach(l => {
     const card = document.createElement('div'); card.className = 'alpha-card';
@@ -675,8 +702,42 @@ function openAlpha() {
     card.appendChild(lbl); card.appendChild(cell); grid.appendChild(card);
   });
   document.getElementById('alpha-overlay').classList.add('open');
+  startAlphaTimer();
 }
-function closeAlpha() { document.getElementById('alpha-overlay').classList.remove('open'); }
+
+function startAlphaTimer() {
+  clearInterval(alphaTimerInt);
+  let t = ALPHA_DURATION;
+  const countEl = document.getElementById('alpha-countdown');
+  const barEl   = document.getElementById('alpha-bar');
+  barEl.style.transition = 'none';
+  barEl.style.width = '100%';
+  requestAnimationFrame(() => {
+    barEl.style.transition = 'width 1s linear, background .3s';
+  });
+
+  function tick() {
+    const m = Math.floor(t/60), s = t%60;
+    countEl.textContent = `${m}:${String(s).padStart(2,'0')}`;
+    countEl.className = t <= 15 ? 'urgent' : '';
+    barEl.style.width = (t / ALPHA_DURATION * 100) + '%';
+    barEl.style.background = t <= 15 ? 'var(--red)' : 'var(--accent)';
+    if (t <= 0) {
+      clearInterval(alphaTimerInt);
+      closeAlpha();
+      const btn = document.querySelector('.ref-btn');
+      if (btn) { btn.disabled = true; btn.textContent = '📖 Alphabet — temps écoulé'; btn.style.opacity = '0.4'; }
+    }
+    t--;
+  }
+  tick();
+  alphaTimerInt = setInterval(tick, 1000);
+}
+
+function closeAlpha() {
+  clearInterval(alphaTimerInt);
+  document.getElementById('alpha-overlay').classList.remove('open');
+}
 function closeBg(e) { if (e.target.id==='alpha-overlay') closeAlpha(); }
 </script>
 </body>
