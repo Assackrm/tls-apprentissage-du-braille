@@ -660,7 +660,8 @@ function saveScore() {
     nom,
     mode: 'Lecture',
     score: lastResult.score,
-    precision: lastResult.pct + '%'
+    precision: lastResult.pct + '%',
+    feuille: 'Braille'
   });
   fetch(SCRIPT_URL + '?' + params, { mode: 'no-cors' })
     .then(() => {
